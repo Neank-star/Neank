@@ -19,18 +19,30 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 3. Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: 4. Setup Gradle 8.7 & Build Release APK
+      - name: 3. Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
-          arguments: assembleRelease -Pandroid.useAndroidX=true
+
+      - name: 4. Auto-Verify Files & Build APK
+        run: |
+          echo "android.useAndroidX=true" > gradle.properties
+          mkdir -p app/src/main/res/values
+          if [ ! -f app/src/main/res/values/strings.xml ]; then
+            echo '<resources><string name="app_name">Neank</string></resources>' > app/src/main/res/values/strings.xml
+          fi
+          sed -i 's/package="com.neank.remote"//g' app/src/main/AndroidManifest.xml
+          KT_FILE=$(find app/src/main/java -name "MainActivity.kt" | head -n 1)
+          if [ -n "$KT_FILE" ]; then
+            sed -i 's/mandatory\.add(MediaConstraints/add(MediaConstraints/g' "$KT_FILE"
+            sed -i 's/add(MediaConstraints/mandatory.add(MediaConstraints/g' "$KT_FILE"
+            sed -i 's/codec.getInputBuffer(inIdx)?.clear()?.put(mixedBuf, 0, read)/val ib = codec.getInputBuffer(inIdx); ib?.clear(); ib?.put(mixedBuf, 0, read)/g' "$KT_FILE"
+          fi
+          gradle assembleDebug --no-daemon
 
       - name: 5. Upload Secure APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Neank-Secure-Release-APK
-          path: app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           

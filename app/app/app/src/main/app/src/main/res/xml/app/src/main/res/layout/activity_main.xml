@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#090D16">
+
+    <!-- 1. Full-Screen Live Video Renderer -->
+    <org.webrtc.SurfaceViewRenderer
+        android:id="@+id/remoteVideoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 2. Reels / Shorts Safe-Zone UI Guide -->
+    <View
+        android:id="@+id/reelsSafeZoneGuide"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="48dp"
+        android:layout_marginBottom="130dp"
+        android:layout_marginEnd="64dp"
+        android:layout_marginStart="16dp"
+        android:background="@android:drawable/editbox_dropdown_light_frame"
+        android:alpha="0.18"
+        android:visibility="gone" />
+
+    <!-- 3. Top Bar: Multi-Node Dropdown & Active Mic Badge -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="56dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/spinnerNodeList"
+            android:layout_width="130dp"
+            android:layout_height="36dp"
+            android:background="#1E293B"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/txtActiveMicBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="#CC064E3B"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:text="Mic: Active"
+            android:textColor="#6EE7B7"
+            android:textSize="11sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- 4. Floating Teleprompter Overlay -->
+    <LinearLayout
+        android:id="@+id/teleprompterContainer"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_gravity="top"
+        android:layout_marginTop="96dp"
+        android:layout_marginHorizontal="16dp"
+        android:background="#880F172A"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TELEPROMPTER"
+                android:textColor="#38BDF8"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+            <SeekBar
+                android:id="@+id/seekPrompterSpeed"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+            <Button
+                android:id="@+id/btnResetPrompter"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:text="Reset"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/prompterScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="4dp">
+            <TextView
+                android:id="@+id/txtPrompterScript"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </ScrollView>
+        <EditText
+            android:id="@+id/inputPrompterScript"
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:hint="Script paste karein..."
+            android:textColor="#FFFFFF"
+            android:textColorHint="#94A3B8"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- 5. Master Switch Drawer -->
+    <ScrollView
+        android:id="@+id/masterSwitchDrawer"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="52dp"
+        android:layout_marginEnd="8dp"
+        android:background="#F20F172A"
+        android:padding="12dp"
+        android:visibility="gone">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="MASTER SWITCHES"
+                android:textColor="#38BDF8"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+            <Switch android:id="@+id/swLiveAudioListen" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Hear Live Audio" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swOldPhoneMic" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Record Rig Mic" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swNewPhoneVoiceover" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Director Voiceover" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swAutoDucking" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Auto-Ducking" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swTeleprompter" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Teleprompter" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swReelsSafeZone" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Reels Safe-Zone" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swAnyDeskTouch" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Remote Touch" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swStealthDarkScreen" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Screen Dim (Battery)" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <Switch android:id="@+id/swStealthHideApp" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Hide App Icon" android:textColor="#F43F5E" android:textSize="11sp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 6. Initial Setup Panel -->
+    <LinearLayout
+        android:id="@+id/setupPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="24dp"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:background="#E6111827">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NEANK SECURE STUDIO"
+            android:textColor="#38BDF8"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Role chunein: Rig node ya Director Hub"
+            android:textColor="#E2E8F0"
+            android:textSize="13sp" />
+        <Button
+            android:id="@+id/btnStartOldPhoneHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:backgroundTint="#10B981"
+            android:text="1. Purana Phone (Start Rig Node)"
+            android:textColor="#FFFFFF" />
+        <EditText
+            android:id="@+id/inputHostIp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="Rig IP dalein (e.g. 192.168.43.1)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#94A3B8"
+            android:inputType="phone" />
+        <Button
+            android:id="@+id/btnConnectNewPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#3B82F6"
+            android:text="2. Naya Phone (Connect Director Hub)"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- 7. Top Controller Bar -->
+    <LinearLayout
+        android:id="@+id/topControllerBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="#B3000000"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        android:visibility="gone">
+        <Button android:id="@+id/btnModeStudio" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:backgroundTint="#EC4899" android:text="9:16 Studio" android:textSize="11sp" />
+        <Button android:id="@+id/btnModeAnyDesk" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:layout_marginStart="4dp" android:backgroundTint="#334155" android:text="AnyDesk" android:textSize="11sp" />
+        <Button android:id="@+id/btnPullReelFile" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_marginStart="4dp" android:backgroundTint="#059669" android:text="Pull MP4" android:textSize="11sp" />
+        <Button android:id="@+id/btnToggleSwitchDrawer" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_marginStart="4dp" android:backgroundTint="#475569" android:text="⚙ Switches" android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- 8. Bottom Studio Bar -->
+    <LinearLayout
+        android:id="@+id/bottomStudioBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#B3000000"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:visibility="gone">
+        <Button android:id="@+id/btnFlipLens" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flip" />
+        <Button android:id="@+id/btnRecordReel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginHorizontal="8dp" android:backgroundTint="#EF4444" android:text="REC 9:16" android:textColor="#FFFFFF" />
+        <Button android:id="@+id/btnToggleTorch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flash" />
+        <Button android:id="@+id/btnSafeZone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="Safe UI" />
+    </LinearLayout>
+
+    <!-- 9. Bottom AnyDesk Bar -->
+    <LinearLayout
+        android:id="@+id/bottomAnyDeskBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#CC0F172A"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:visibility="gone">
+        <Button android:id="@+id/btnNavBack" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Back" />
+        <Button android:id="@+id/btnNavHome" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginHorizontal="4dp" android:text="Home" />
+        <Button android:id="@+id/btnNavRecents" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Recents" />
+        <Button android:id="@+id/btnNavLock" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="4dp" android:backgroundTint="#DC2626" android:text="Lock" />
+    </LinearLayout>
+</FrameLayout>

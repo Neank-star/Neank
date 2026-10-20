@@ -24,32 +24,13 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: 4. Auto-Verify Files & Build APK
+      - name: 4. Generate All Complete Files & Build APK
         run: |
-          KT_FOUND=$(find . -iname "*MainActivity*.kt" | head -n 1)
-          XML_FOUND=$(find . -iname "*activity_main*.xml" | head -n 1)
-          if [ -n "$KT_FOUND" ]; then cp "$KT_FOUND" /tmp/MainActivity.kt; fi
-          if [ -n "$XML_FOUND" ]; then cp "$XML_FOUND" /tmp/activity_main.xml; fi
-
           rm -rf app
           mkdir -p app/src/main/java/com/neank/remote
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/xml
           mkdir -p app/src/main/res/values
-
-          if [ -f /tmp/MainActivity.kt ]; then
-            cp /tmp/MainActivity.kt app/src/main/java/com/neank/remote/MainActivity.kt
-          else
-            echo "MainActivity.kt file nahi mili! Kripaya MainActivity.kt check karein."
-            exit 1
-          fi
-
-          if [ -f /tmp/activity_main.xml ]; then
-            cp /tmp/activity_main.xml app/src/main/res/layout/activity_main.xml
-          else
-            echo "activity_main.xml file nahi mili! Kripaya activity_main.xml check karein."
-            exit 1
-          fi
 
           echo "android.useAndroidX=true" > gradle.properties
 
@@ -122,6 +103,20 @@ jobs:
           }
           EOF
 
+          echo '<resources><string name="app_name">Neank</string></resources>' > app/src/main/res/values/strings.xml
+
+          cat << 'EOF' > app/src/main/res/xml/neank_accessibility_config.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+              android:description="@string/app_name"
+              android:accessibilityEventTypes="typeAllMask"
+              android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
+              android:accessibilityFeedbackType="feedbackGeneric"
+              android:canRetrieveWindowContent="true"
+              android:canPerformGestures="true"
+              android:notificationTimeout="50" />
+          EOF
+
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -185,31 +180,224 @@ jobs:
           </manifest>
           EOF
 
-          cat << 'EOF' > app/src/main/res/xml/neank_accessibility_config.xml
+          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
-          <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-              android:description="@string/app_name"
-              android:accessibilityEventTypes="typeAllMask"
-              android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
-              android:accessibilityFeedbackType="feedbackGeneric"
-              android:canRetrieveWindowContent="true"
-              android:canPerformGestures="true"
-              android:notificationTimeout="50" />
-          EOF
+          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#090D16">
 
-          echo '<resources><string name="app_name">Neank</string></resources>' > app/src/main/res/values/strings.xml
+              <org.webrtc.SurfaceViewRenderer
+                  android:id="@+id/remoteVideoView"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent" />
 
-          KT_FILE="app/src/main/java/com/neank/remote/MainActivity.kt"
-          sed -i 's/ private set/\n    private set/g' "$KT_FILE"
-          sed -i 's/mandatory\.add(MediaConstraints/add(MediaConstraints/g' "$KT_FILE"
-          sed -i 's/add(MediaConstraints/mandatory.add(MediaConstraints/g' "$KT_FILE"
-          sed -i 's/codec.getInputBuffer(inIdx)?.clear()?.put(mixedBuf, 0, read)/val ib = codec.getInputBuffer(inIdx); ib?.clear(); ib?.put(mixedBuf, 0, read)/g' "$KT_FILE"
+              <View
+                  android:id="@+id/reelsSafeZoneGuide"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:layout_marginTop="48dp"
+                  android:layout_marginBottom="130dp"
+                  android:layout_marginEnd="64dp"
+                  android:layout_marginStart="16dp"
+                  android:background="@android:drawable/editbox_dropdown_light_frame"
+                  android:alpha="0.18"
+                  android:visibility="gone" />
 
-          gradle assembleDebug --no-daemon
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="top"
+                  android:layout_marginTop="56dp"
+                  android:gravity="center"
+                  android:orientation="horizontal">
 
-      - name: 5. Upload Secure APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Neank-Secure-Release-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
-          
+                  <Spinner
+                      android:id="@+id/spinnerNodeList"
+                      android:layout_width="130dp"
+                      android:layout_height="36dp"
+                      android:background="#1E293B"
+                      android:visibility="gone" />
+
+                  <TextView
+                      android:id="@+id/txtActiveMicBadge"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_marginStart="8dp"
+                      android:background="#CC064E3B"
+                      android:paddingHorizontal="10dp"
+                      android:paddingVertical="4dp"
+                      android:text="Mic: Active"
+                      android:textColor="#6EE7B7"
+                      android:textSize="11sp"
+                      android:visibility="gone" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:id="@+id/teleprompterContainer"
+                  android:layout_width="match_parent"
+                  android:layout_height="220dp"
+                  android:layout_gravity="top"
+                  android:layout_marginTop="96dp"
+                  android:layout_marginHorizontal="16dp"
+                  android:background="#880F172A"
+                  android:orientation="vertical"
+                  android:padding="10dp"
+                  android:visibility="gone">
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:gravity="center_vertical"
+                      android:orientation="horizontal">
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="TELEPROMPTER"
+                          android:textColor="#38BDF8"
+                          android:textSize="11sp"
+                          android:textStyle="bold" />
+                      <SeekBar
+                          android:id="@+id/seekPrompterSpeed"
+                          android:layout_width="0dp"
+                          android:layout_height="wrap_content"
+                          android:layout_weight="1" />
+                      <Button
+                          android:id="@+id/btnResetPrompter"
+                          android:layout_width="wrap_content"
+                          android:layout_height="30dp"
+                          android:text="Reset"
+                          android:textSize="10sp" />
+                  </LinearLayout>
+
+                  <ScrollView
+                      android:id="@+id/prompterScrollView"
+                      android:layout_width="match_parent"
+                      android:layout_height="0dp"
+                      android:layout_weight="1"
+                      android:layout_marginTop="4dp">
+                      <TextView
+                          android:id="@+id/txtPrompterScript"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:textColor="#FFFFFF"
+                          android:textSize="18sp"
+                          android:textStyle="bold" />
+                  </ScrollView>
+                  <EditText
+                      android:id="@+id/inputPrompterScript"
+                      android:layout_width="match_parent"
+                      android:layout_height="34dp"
+                      android:hint="Script paste karein..."
+                      android:textColor="#FFFFFF"
+                      android:textColorHint="#94A3B8"
+                      android:textSize="11sp" />
+              </LinearLayout>
+
+              <ScrollView
+                  android:id="@+id/masterSwitchDrawer"
+                  android:layout_width="280dp"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="top|end"
+                  android:layout_marginTop="52dp"
+                  android:layout_marginEnd="8dp"
+                  android:background="#F20F172A"
+                  android:padding="12dp"
+                  android:visibility="gone">
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical">
+                      <TextView
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="MASTER SWITCHES"
+                          android:textColor="#38BDF8"
+                          android:textSize="11sp"
+                          android:textStyle="bold" />
+                      <Switch android:id="@+id/swLiveAudioListen" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Hear Live Audio" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swOldPhoneMic" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Record Rig Mic" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swNewPhoneVoiceover" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Director Voiceover" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swAutoDucking" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Auto-Ducking" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swTeleprompter" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Teleprompter" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swReelsSafeZone" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Reels Safe-Zone" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swAnyDeskTouch" android:layout_width="match_parent" android:layout_height="36dp" android:checked="true" android:text="Remote Touch" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swStealthDarkScreen" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Screen Dim (Battery)" android:textColor="#FFFFFF" android:textSize="11sp" />
+                      <Switch android:id="@+id/swStealthHideApp" android:layout_width="match_parent" android:layout_height="36dp" android:checked="false" android:text="Hide App Icon" android:textColor="#F43F5E" android:textSize="11sp" />
+                  </LinearLayout>
+              </ScrollView>
+
+              <LinearLayout
+                  android:id="@+id/setupPanel"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="center"
+                  android:layout_margin="24dp"
+                  android:orientation="vertical"
+                  android:padding="20dp"
+                  android:background="#E6111827">
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="NEANK SECURE STUDIO"
+                      android:textColor="#38BDF8"
+                      android:textSize="20sp"
+                      android:textStyle="bold" />
+                  <TextView
+                      android:id="@+id/txtStatus"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginTop="6dp"
+                      android:text="Role chunein: Rig node ya Director Hub"
+                      android:textColor="#E2E8F0"
+                      android:textSize="13sp" />
+                  <Button
+                      android:id="@+id/btnStartOldPhoneHost"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginTop="14dp"
+                      android:backgroundTint="#10B981"
+                      android:text="1. Purana Phone (Start Rig Node)"
+                      android:textColor="#FFFFFF" />
+                  <EditText
+                      android:id="@+id/inputHostIp"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginTop="14dp"
+                      android:hint="Rig IP dalein (e.g. 192.168.43.1)"
+                      android:textColor="#FFFFFF"
+                      android:textColorHint="#94A3B8"
+                      android:inputType="phone" />
+                  <Button
+                      android:id="@+id/btnConnectNewPhone"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginTop="8dp"
+                      android:backgroundTint="#3B82F6"
+                      android:text="2. Naya Phone (Connect Director Hub)"
+                      android:textColor="#FFFFFF" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:id="@+id/topControllerBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="top"
+                  android:background="#B3000000"
+                  android:gravity="center_vertical"
+                  android:orientation="horizontal"
+                  android:padding="6dp"
+                  android:visibility="gone">
+                  <Button android:id="@+id/btnModeStudio" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:backgroundTint="#EC4899" android:text="9:16 Studio" android:textSize="11sp" />
+                  <Button android:id="@+id/btnModeAnyDesk" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:layout_marginStart="4dp" android:backgroundTint="#334155" android:text="AnyDesk" android:textSize="11sp" />
+                  <Button android:id="@+id/btnPullReelFile" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_marginStart="4dp" android:backgroundTint="#059669" android:text="Pull MP4" android:textSize="11sp" />
+                  <Button android:id="@+id/btnToggleSwitchDrawer" android:layout_width="wrap_content" android:layout_height="36dp" android:layout_marginStart="4dp" android:backgroundTint="#475569" android:text="Switches" android:textSize="11sp" />
+              </LinearLayout>
+
+              <LinearLayout
+                  android:id="@+id/bottomStudioBar"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="bottom"
+                  android:background="#B3000000"
+               

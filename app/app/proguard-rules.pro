@@ -1,0 +1,6 @@
+-repackageclasses 'com.neank.remote.sec'
+-allowaccessmodification
+-keep class org.webrtc.** { *; }
+-dontwarn org.webrtc.**
+-keep class androidx.camera.** { *; }
+-dontwarn androidx.camera.**
